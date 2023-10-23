@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/silaselisha/fiber-api/middleware"
 	"github.com/silaselisha/fiber-api/utils"
 )
 
@@ -28,7 +29,10 @@ func main() {
 	app.Use(recover.New())
 
 	app.Post("/users", store.createUser)
+	app.Post("/login", store.login)
 	app.Get("/users/:id", store.getUserById)
+
+	app.Get("/products", middleware.Protected(), store.getProducts)
 
 	app.Listen(SERVER_ADDRESS)
 }
