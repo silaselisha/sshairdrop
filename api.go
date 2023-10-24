@@ -8,7 +8,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/silaselisha/fiber-api/middleware"
 	"github.com/silaselisha/fiber-api/types"
-	"github.com/silaselisha/fiber-api/utils"
+	"github.com/silaselisha/fiber-api/util"
+	"github.com/silaselisha/fiber-api/token"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,12 +26,12 @@ func NewStore(cl *mongo.Client, db *mongo.Database) *Store {
 		db: db,
 	}
 }
-
 type UserCreateParams struct {
 	UserName  string    `json:"username" bson:"username"`
-	Email     string    `json:"email" bson:"email"`
+	Email     string    `json:"email" bson:"email" validate:"email"`
 	Password  string    `json:"password" bson:"password"`
 	Gender    string    `json:"gender" bson:"gender"`
+	Verified  bool      `json:"verified" bson:"verified"`
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 }
 
@@ -52,14 +53,23 @@ func (s *Store) createUser(ctx *fiber.Ctx) error {
 		})
 	}
 
-	hashedPassword, err := utils.EncryptPassword(data.Password)
+	if err := validate.Struct(data); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"err":     err.Error(),
+			"message": "inavlid request",
+		})
+	}
+
+	hashedPassword, err := util.EncryptPassword(data.Password)
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"err":     err.Error(),
 			"message": "internal server error",
 		})
 	}
+
 	data.Password = hashedPassword
+	data.Verified = false
 	data.CreatedAt = time.Now()
 
 	collection := s.db.Collection("users")
@@ -81,7 +91,15 @@ func (s *Store) createUser(ctx *fiber.Ctx) error {
 		})
 	}
 
-	jwtmaker, err := utils.NewJwtMaker("abcdefghijklmnopqrstuvwxyzabcdefghijklmonpqrsturvwxyz")
+	config, err := util.Load(".")
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"err":     err.Error(),
+			"message": "internal server error",
+		})
+	}
+	
+	jwtmaker, err := token.NewJwtMaker(config.TokenSecretKey)
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"err":     err.Error(),
@@ -97,7 +115,6 @@ func (s *Store) createUser(ctx *fiber.Ctx) error {
 		})
 	}
 
-	fmt.Println(token)
 	return ctx.Status(http.StatusCreated).JSON(fiber.Map{
 		"token": token,
 		"user":  user,
@@ -150,32 +167,40 @@ func (s *Store) login(ctx *fiber.Ctx) error {
 	filter := bson.D{{Key: "email", Value: loginCred.Email}}
 	if err := s.db.Collection("users").FindOne(ctx.Context(), filter).Decode(&user); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"err": err.Error(),
+			"err":     err.Error(),
 			"message": "inavlid request",
 		})
 	}
-	
-	if err := utils.DecryptPassword(user.Password, loginCred.Password); err != nil {
+
+	if err := util.DecryptPassword(user.Password, loginCred.Password); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"err": err.Error(),
+			"err":     err.Error(),
 			"message": "invalid request",
 		})
 	}
 
-	jwtMaker, err := utils.NewJwtMaker("abcdefghijklmnopqrstuvwxyzabcdefghijklmonpqrsturvwxyz")
+	config, err := util.Load(".")
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"err": err.Error(),
+			"err":     err.Error(),
 			"message": "internal server error",
 		})
 	}
-	token, err := jwtMaker.CreateToken(user.Email, 15 * time.Minute)
+
+	jwtMaker, err := token.NewJwtMaker(config.TokenSecretKey)
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"err": err.Error(),
+			"err":     err.Error(),
 			"message": "internal server error",
 		})
-		
+	}
+	token, err := jwtMaker.CreateToken(user.Email, 15*time.Minute)
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"err":     err.Error(),
+			"message": "internal server error",
+		})
+
 	}
 
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
@@ -183,17 +208,8 @@ func (s *Store) login(ctx *fiber.Ctx) error {
 	})
 }
 
-func(s *Store) getProducts(ctx *fiber.Ctx) error {
+func (s *Store) getProducts(ctx *fiber.Ctx) error {
 	user := ctx.Locals(middleware.User).(types.Payload)
 	fmt.Println(user.Email)
 	return nil
 }
-
-
-// ** error handler D_R_Y
-// func errorHandler(ctx *fiber.Ctx, status int, err error, message string) error {
-// 	return ctx.Status(status).JSON(fiber.Map{
-// 		"err": err.Error(),
-// 		"message": message,
-// 	})
-// }

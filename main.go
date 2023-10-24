@@ -4,19 +4,20 @@ import (
 	"context"
 	"log"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/silaselisha/fiber-api/middleware"
-	"github.com/silaselisha/fiber-api/utils"
+	"github.com/silaselisha/fiber-api/util"
 )
 
-const (
-	SERVER_ADDRESS = ":8080"
-)
-
+var validate *validator.Validate
 func main() {
-	client, database, err := utils.InitDB()
+	config, err := util.Load(".")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client, database, err := util.InitDB()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,14 +26,21 @@ func main() {
 	store := NewStore(client, database)
 
 	app := fiber.New()
-	app.Use(cors.New())
-	app.Use(recover.New())
 
-	app.Post("/users", store.createUser)
-	app.Post("/login", store.login)
-	app.Get("/users/:id", store.getUserById)
+	validate = validator.New()
+	validate.RegisterValidation("email", util.EmailValidator)
+	
 
-	app.Get("/products", middleware.Protected(), store.getProducts)
+	api := app.Group("/api")
+	v1 := api.Group("/v1", func(ctx *fiber.Ctx) error {
+		ctx.Set("version", "v1")
+		return ctx.Next()
+	})
+	v1.Post("/users", store.createUser)
+	v1.Post("/login", store.login)
+	v1.Get("/users/:id", store.getUserById)
 
-	app.Listen(SERVER_ADDRESS)
+	v1.Get("/products", middleware.Protected(), store.getProducts)
+
+	app.Listen(config.ServerAddress)
 }
