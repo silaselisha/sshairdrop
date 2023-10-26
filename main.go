@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/template/django/v3"
 	"github.com/silaselisha/fiber-api/handlers"
 	"github.com/silaselisha/fiber-api/util"
 )
@@ -24,7 +26,18 @@ func main() {
 	defer database.Client().Disconnect(context.Background())
 	store := handlers.NewStore(client, database)
 
-	app := fiber.New()
+	engine := django.New("./templates", ".django")
+	
+	app := fiber.New(fiber.Config{
+		Views: engine,
+	})
+	app.Static("static","./static")
+	app.Use(cors.New())
+	app.Get("/", func(ctx *fiber.Ctx) error {
+		return ctx.Render("index", fiber.Map{
+			"Title": "fiber api",
+		}, "layouts/main")
+	})
 
 	handlers.Validate = validator.New()
 	handlers.Validate.RegisterValidation("email", util.EmailValidator)

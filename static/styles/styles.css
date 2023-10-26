@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Signika+Negative&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    font-family: 'Signika Negative', sans-serif;
+    box-sizing: border-box;
+}
+
+.main {
+    margin: 20px auto;
+    background: #fff;
+    max-width: 35%;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 1rem;
+}
+
+.container h1 {
+    display: block;
+    font-size: 30px;
+    font-weight: 400;
+    text-transform: capitalize;
+    margin-bottom: 1.2rem;
+}
+
+.container p {
+    font-size: 14px;
+    margin-bottom: 0.2rem;
+    text-align: justify;
+}
+
+.footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.btn {
+    background-color: #f4a52e;
+    padding: .9rem 1.2rem;
+    margin: 1.2rem;
+    width: 120px;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    border: none;
+    text-transform: uppercase;
+}
+
+.header {
+    height: 5rem;
+    width: 100%;
+    background-image: url("/static/images/inbox.jpeg");
+    background-repeat: none;
+    background-position: center;
+    background-size: contain;
+    border-radius: 5px 5px 0px 0px;
+}
+
+table {
+    width: 100%;
+}
+
+table td {
+    padding: 10px;
+}

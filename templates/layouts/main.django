@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>main</title>
+        <link rel="stylesheet" href="static/styles/styles.css">
+    </head>
+    <body>
+      {{embed}}
+    </body>
+</html>

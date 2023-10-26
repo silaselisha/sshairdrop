@@ -1,0 +1,30 @@
+<main class="main">
+    {% include "partials/header.django" %}
+    <div class="container">
+        <h1>Email Confirmation</h1>
+        <table>
+            <tr>
+                <td>
+                    <p>Dear [Client's Name],</p>
+                </br>
+                    <p>Thank you for registering with [Your Company Name]! To complete the account verification process, please click the "Verify" button below:</p>
+
+                    <p><a href="[Verification Link]" class="button">Verify My Account</a></p>
+                
+            
+                    <p>This verification link will be valid for the next 24 hours. After this period, you may need to request a new verification link.</p>
+
+                    <p>If you didn't create an account with [Your Company Name], please disregard this email or contact our support team at [Support Email Address].</p>
+                </br>
+                    <p>Thank you for choosing [Your Company Name]!</p>
+
+                </br>
+                    <p>Best regards,</p>
+                    <p>[Your Name]</p>
+                    <p>[Your Company Name]</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% include "partials/footer.django" %}
+</main>
