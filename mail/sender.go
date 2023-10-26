@@ -9,7 +9,6 @@ import (
 
 type EmailSender interface {
 	SendEmail(
-		Bcc []string,
 		To []string,
 		Cc []string,
 		Subject string,
@@ -31,12 +30,11 @@ func NewGmailSender(name, fromEmailAddres, fromEmailPassword string) EmailSender
 	}
 }
 
-func (sender *GmailSender) SendEmail(bcc []string, to []string, cc []string, subject string, content string) error {
+func (sender *GmailSender) SendEmail(to []string, cc []string, subject string, content string) error {
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("%s <%s>", sender.name, sender.fromEmailAddress)
 	e.Subject = subject
 	e.To = to
-	e.Bcc = bcc
 	e.Cc = cc
 	e.HTML = []byte(content)
 

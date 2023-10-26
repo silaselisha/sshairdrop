@@ -5,6 +5,8 @@ import (
 )
 
 type config struct {
+	DbName              string `mapstructure:"DB_NAME"`
+	DbUri               string `mapstructure:"DB_URI"`
 	SenderEmailAddress  string `mapstructure:"SENDER_EMAIL_ADDRESS"`
 	SenderEmailName     string `mapstructure:"SENDER_EMAIL_NAME"`
 	SenderEmailPassword string `mapstructure:"SENDER_EMAIL_PASSWORD"`

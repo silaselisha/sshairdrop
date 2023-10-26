@@ -6,11 +6,10 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"github.com/silaselisha/fiber-api/middleware"
+	"github.com/silaselisha/fiber-api/handlers"
 	"github.com/silaselisha/fiber-api/util"
 )
 
-var validate *validator.Validate
 func main() {
 	config, err := util.Load(".")
 	if err != nil {
@@ -23,24 +22,21 @@ func main() {
 	}
 
 	defer database.Client().Disconnect(context.Background())
-	store := NewStore(client, database)
+	store := handlers.NewStore(client, database)
 
 	app := fiber.New()
 
-	validate = validator.New()
-	validate.RegisterValidation("email", util.EmailValidator)
-	
+	handlers.Validate = validator.New()
+	handlers.Validate.RegisterValidation("email", util.EmailValidator)
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1", func(ctx *fiber.Ctx) error {
 		ctx.Set("version", "v1")
 		return ctx.Next()
 	})
-	v1.Post("/users", store.createUser)
-	v1.Post("/login", store.login)
-	v1.Get("/users/:id", store.getUserById)
-
-	v1.Get("/products", middleware.Protected(), store.getProducts)
+	v1.Post("/users", store.CreateUser)
+	v1.Post("/login", store.Login)
+	v1.Get("/users/:id", store.GetUserById)
 
 	app.Listen(config.ServerAddress)
 }
