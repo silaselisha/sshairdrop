@@ -21,6 +21,7 @@ type Store interface {
 	CreateUser(ctx *fiber.Ctx) error
 	GetUserById(ctx *fiber.Ctx) error
 	VerifyAccount(ctx *fiber.Ctx) error
+	FileShare(ctx *fiber.Ctx) error
 }
 
 type MDBStore struct {

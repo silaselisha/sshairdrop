@@ -8,12 +8,18 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/silaselisha/fiber-api/token"
+	"github.com/silaselisha/fiber-api/util"
 )
 
 var User struct{} = struct{}{}
 
 func Protected() fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
+		config, err := util.Load("./..")
+		if err != nil {
+			return err
+		}
+
 		headers := ctx.GetReqHeaders()
 		authorization, ok := headers["Authorization"]
 		if !ok {
@@ -33,7 +39,7 @@ func Protected() fiber.Handler {
 			})
 		}
 
-		maker, err := token.NewJwtMaker("abcdefghijklmnopqrstuvwxyzabcdefghijklmonpqrsturvwxyz")
+		maker, err := token.NewJwtMaker(config.TokenSecretKey)
 		if err != nil {
 			return ctx.Status(http.StatusUnauthorized).JSON(fiber.Map{
 				"err":     errors.New("unauthorized 3").Error(),
