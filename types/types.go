@@ -35,3 +35,19 @@ func (p *Payload) Valid() error {
 	}
 	return nil
 }
+
+type RandToken struct {
+	Token     string
+	Email     string
+	IssuedAt  time.Time
+	ExpiresIn time.Duration
+}
+
+func NewRandToken(rand_token, email string) *RandToken {
+	return &RandToken{
+		Token:     rand_token,
+		Email:     email,
+		IssuedAt:  time.Now(),
+		ExpiresIn: 15 * time.Minute,
+	}
+}

@@ -27,21 +27,17 @@ func main() {
 	store := handlers.NewStore(client, database)
 
 	engine := django.New("./templates", ".django")
-	
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})
-	app.Static("static","./static")
+	app.Static("static", "./static")
 	app.Use(cors.New())
-	app.Get("/", func(ctx *fiber.Ctx) error {
-		return ctx.Render("index", fiber.Map{
-			"Title": "fiber api",
-		}, "layouts/main")
-	})
 
 	handlers.Validate = validator.New()
 	handlers.Validate.RegisterValidation("email", util.EmailValidator)
 
+	
+	app.Get("/verify/:token?", store.VerifyAccount)
 	api := app.Group("/api")
 	v1 := api.Group("/v1", func(ctx *fiber.Ctx) error {
 		ctx.Set("version", "v1")

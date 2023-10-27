@@ -12,6 +12,8 @@ type config struct {
 	SenderEmailPassword string `mapstructure:"SENDER_EMAIL_PASSWORD"`
 	TokenSecretKey      string `mapstructure:"TOKEN_SECRET_KEY"`
 	ServerAddress       string `mapstructure:"SERVER_ADDRESS"`
+	EmailHost           string `mapstructure:"EMAIL_HOST"`
+	EmailAddress        string `mapstructure:"EMAIL_ADDRESS"`
 }
 
 func Load(path string) (config *config, err error) {

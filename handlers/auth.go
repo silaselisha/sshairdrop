@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/silaselisha/fiber-api/mail"
 	"github.com/silaselisha/fiber-api/token"
 	"github.com/silaselisha/fiber-api/types"
 	"github.com/silaselisha/fiber-api/util"
@@ -18,6 +20,7 @@ type Store interface {
 	Login(ctx *fiber.Ctx) error
 	CreateUser(ctx *fiber.Ctx) error
 	GetUserById(ctx *fiber.Ctx) error
+	VerifyAccount(ctx *fiber.Ctx) error
 }
 
 type MDBStore struct {
@@ -25,6 +28,7 @@ type MDBStore struct {
 	db *mongo.Database
 }
 
+var t10n *types.RandToken
 var Validate *validator.Validate
 
 func NewStore(cl *mongo.Client, db *mongo.Database) Store {
@@ -78,6 +82,14 @@ func (s *MDBStore) CreateUser(ctx *fiber.Ctx) error {
 		return util.ErrorHandler(ctx, http.StatusInternalServerError, err, "failed to create new user")
 	}
 
+	t10n = types.NewRandToken(util.RandTokenGenerator(8), data.Email)
+	verification_link := fmt.Sprintf("http://localhost:3000/verify?token=%v", t10n.Token)
+
+	content, err := mail.ParseMailTemplate(data.UserName, verification_link)
+	if err != nil {
+		return util.ErrorHandler(ctx, http.StatusInternalServerError, err, "internal server error")
+	}
+
 	var user types.User
 	filter := bson.D{{Key: "_id", Value: record.InsertedID}}
 	if err := collection.FindOne(ctx.Context(), filter).Decode(&user); err != nil {
@@ -89,6 +101,7 @@ func (s *MDBStore) CreateUser(ctx *fiber.Ctx) error {
 		return util.ErrorHandler(ctx, http.StatusInternalServerError, err, "invalid request")
 	}
 
+
 	jwtmaker, err := token.NewJwtMaker(config.TokenSecretKey)
 	if err != nil {
 		return util.ErrorHandler(ctx, http.StatusInternalServerError, err, "internal server error")
@@ -98,6 +111,9 @@ func (s *MDBStore) CreateUser(ctx *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorHandler(ctx, http.StatusInternalServerError, err, "internal server error")
 	}
+
+	sender := mail.NewGmailSender("ssh file drop", "elishasilas87@gmail.com", config.SenderEmailPassword)
+	sender.SendEmail([]string{data.Email}, nil, "Account activation", content)
 
 	return ctx.Status(http.StatusCreated).JSON(fiber.Map{
 		"token": token,
@@ -166,5 +182,32 @@ func (s *MDBStore) Login(ctx *fiber.Ctx) error {
 
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"token": token,
+	})
+}
+
+func (s *MDBStore) VerifyAccount(ctx *fiber.Ctx) error {
+	token := ctx.Query("token")
+
+	if token != t10n.Token {
+		return util.ErrorHandler(ctx, http.StatusBadRequest, fmt.Errorf("invalid token"), "invalid token")
+	}
+
+	time_checker := t10n.IssuedAt.Add(t10n.ExpiresIn)
+	if time.Now().After(time_checker) {
+		return util.ErrorHandler(ctx, http.StatusBadRequest, fmt.Errorf("invalid token"), "invalid token")
+	}
+
+	filter := bson.M{"email": t10n.Email}
+	update := bson.M{"$set": bson.D{{Key: "verified", Value: true}}}
+
+	var user *types.User
+	err := s.db.Collection("users").FindOneAndUpdate(ctx.Context(), filter, update).Decode(&user)
+	if err != nil {
+		return util.ErrorHandler(ctx, http.StatusInternalServerError, fmt.Errorf("internal server error"), "internal server error")
+	}
+
+	t10n.ExpiresIn = 1 * time.Microsecond
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"user": *user,
 	})
 }

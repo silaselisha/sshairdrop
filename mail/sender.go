@@ -5,6 +5,7 @@ import (
 	"net/smtp"
 
 	"github.com/jordan-wright/email"
+	"github.com/silaselisha/fiber-api/util"
 )
 
 type EmailSender interface {
@@ -31,6 +32,11 @@ func NewGmailSender(name, fromEmailAddres, fromEmailPassword string) EmailSender
 }
 
 func (sender *GmailSender) SendEmail(to []string, cc []string, subject string, content string) error {
+	config, err := util.Load("./..")
+	if err != nil {
+		return err
+	}
+
 	e := email.NewEmail()
 	e.From = fmt.Sprintf("%s <%s>", sender.name, sender.fromEmailAddress)
 	e.Subject = subject
@@ -38,6 +44,6 @@ func (sender *GmailSender) SendEmail(to []string, cc []string, subject string, c
 	e.Cc = cc
 	e.HTML = []byte(content)
 
-	smtp_auth := smtp.PlainAuth("", sender.fromEmailAddress, sender.fromEmailPassword, "smtp.gmail.com")
-	return e.Send("smtp.gmail.com:587", smtp_auth)
+	smtp_auth := smtp.PlainAuth("", sender.fromEmailAddress, sender.fromEmailPassword, config.EmailHost)
+	return e.Send(config.EmailAddress, smtp_auth)
 }

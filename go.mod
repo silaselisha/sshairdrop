@@ -3,8 +3,10 @@ module github.com/silaselisha/fiber-api
 go 1.21.1
 
 require (
+	github.com/flosch/pongo2 v0.0.0-20200913210552-0d938eb266f3
 	github.com/go-playground/validator/v10 v10.15.5
 	github.com/gofiber/fiber/v2 v2.50.0
+	github.com/gofiber/template/django/v3 v3.1.7
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/spf13/viper v1.17.0
@@ -20,7 +22,6 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gofiber/template v1.8.2 // indirect
-	github.com/gofiber/template/django/v3 v3.1.7 // indirect
 	github.com/gofiber/utils v1.1.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.3.1 // indirect
