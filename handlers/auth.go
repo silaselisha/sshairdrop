@@ -53,6 +53,7 @@ type UserRequestParams struct {
 	UserName  string    `json:"username" bson:"username"`
 	Email     string    `json:"email" bson:"email"`
 	Gender    string    `json:"gender" bson:"gender"`
+	Verified  bool      `json:"verified" bson:"gender"`
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 }
 
@@ -86,6 +87,7 @@ func (s *MDBStore) CreateUser(ctx *fiber.Ctx) error {
 	t10n = types.NewRandToken(util.RandTokenGenerator(8), data.Email)
 	verification_link := fmt.Sprintf("http://localhost:3000/verify?token=%v", t10n.Token)
 
+	fmt.Println("verification token", t10n.Token)
 	content, err := mail.ParseMailTemplate(data.UserName, verification_link)
 	if err != nil {
 		return util.ErrorHandler(ctx, http.StatusInternalServerError, err, "internal server error")
@@ -101,7 +103,6 @@ func (s *MDBStore) CreateUser(ctx *fiber.Ctx) error {
 	if err != nil {
 		return util.ErrorHandler(ctx, http.StatusInternalServerError, err, "invalid request")
 	}
-
 
 	jwtmaker, err := token.NewJwtMaker(config.TokenSecretKey)
 	if err != nil {

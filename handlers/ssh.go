@@ -20,6 +20,8 @@ func (s *MDBStore) FileShare(ctx *fiber.Ctx) error {
 	token := ctx.Query("token")
 	tun, ok := Tunnels[token]
 
+	fmt.Println(token)
+
 	if !ok {
 		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"err":     fmt.Errorf("ssh session id not found: -> %v", token),

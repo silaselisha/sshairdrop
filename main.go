@@ -81,7 +81,8 @@ func main() {
 		log.Fatal(ssh.ListenAndServe(":2222", nil))
 	}()
 
-	v1.Get("/sshairdrop/:token?", middleware.Protected(), store.FileShare)
+	app.Use(middleware.Protected())
+	v1.Get("/sshairdrop/:token?", store.FileShare)
 
 	app.Listen(config.ServerAddress)
 }
